@@ -41,12 +41,11 @@ func destructureParams(s string) []genai.Schema {
 	}
 	params := strings.Split(s[start:end], ", ")
 	for _, a := range params {
-		i := strings.Split(a, " ")
 		var t genai.Type
-		if i[1][0:1] == "[]" && (i[1][2:5] != "rune" && i[1][2:5] != "byte") {
+		if a[0:1] == "[]" && (a[2:5] != "rune" && a[2:5] != "byte") {
 			t = genai.TypeArray
 		} else {
-			switch i[1] {
+			switch a {
 			case "bool":
 				t = genai.TypeBoolean
 			case "string", "[]byte", "[]rune":
@@ -59,10 +58,8 @@ func destructureParams(s string) []genai.Schema {
 				t = genai.TypeObject
 			}
 		}
-
 		schemas = append(schemas, genai.Schema{
-			Type:        t,
-			Description: i[0],
+			Type: t,
 		})
 	}
 	return schemas
