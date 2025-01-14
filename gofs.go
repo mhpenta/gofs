@@ -32,7 +32,6 @@ func GetFunctionDetails(f any) (*Details, error) {
 }
 
 func destructureParamsFromType(t reflect.Type) []Schema {
-	fmt.Println(t)
 	var schemas []Schema
 	params := getParameters(t)
 	for _, p := range params {
