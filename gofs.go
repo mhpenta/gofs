@@ -14,7 +14,7 @@ type Details struct {
 	Parameters []genai.Schema
 }
 
-func Get(f any) any {
+func Get(f any) Details {
 	sig := fmt.Sprintf("%T", f)
 	p := destructureParams(sig)
 	n := getFunctionName(f)
