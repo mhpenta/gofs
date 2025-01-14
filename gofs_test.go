@@ -6,41 +6,95 @@ import (
 	"github.com/mhpenta/gofs"
 )
 
-type HelloFuncParams struct {
+type singleParam struct {
 	world string `json:"world"`
 }
 
-func hello(helloFuncParams HelloFuncParams) {}
+func singleParamFunc(p singleParam) {}
 
-type HelloFuncParams2 struct {
+type customParam struct {
 	world string `json:"worldParam"`
 }
 
-func hello2(helloFuncParams HelloFuncParams2) {}
+func customParamFunc(p customParam) {}
 
-func Test(t *testing.T) {
+type multiParam struct {
+	hello string `json:"hello"`
+	world string `json:"world"`
+}
 
-	details, err := gofs.GetFunctionDetails(hello)
-	if err != nil {
-		t.Error(err)
-	}
-	if details.Name != "hello" {
-		t.Errorf("Expected 'hello', got %v", details)
+func multiParamFunc(p multiParam) {}
+
+type typeParam struct {
+	str   string  `json:"str"`
+	num   float64 `json:"num"`
+	flag  bool    `json:"flag"`
+	count int     `json:"count"`
+}
+
+func typeParamFunc(p typeParam) {}
+
+func TestGetFunctionDetails(t *testing.T) {
+	tests := []struct {
+		name       string
+		fn         interface{}
+		wantName   string
+		wantParams []string
+		wantTypes  []gofs.Type
+	}{
+		{
+			name:       "single parameter",
+			fn:         singleParamFunc,
+			wantName:   "singleParamFunc",
+			wantParams: []string{"world"},
+			wantTypes:  []gofs.Type{gofs.TypeString},
+		},
+		{
+			name:       "custom json tag",
+			fn:         customParamFunc,
+			wantName:   "customParamFunc",
+			wantParams: []string{"worldParam"},
+			wantTypes:  []gofs.Type{gofs.TypeString},
+		},
+		{
+			name:       "multiple parameters",
+			fn:         multiParamFunc,
+			wantName:   "multiParamFunc",
+			wantParams: []string{"hello", "world"},
+			wantTypes:  []gofs.Type{gofs.TypeString, gofs.TypeString},
+		},
+		{
+			name:       "different types",
+			fn:         typeParamFunc,
+			wantName:   "typeParamFunc",
+			wantParams: []string{"str", "num", "flag", "count"},
+			wantTypes:  []gofs.Type{gofs.TypeString, gofs.TypeNumber, gofs.TypeBoolean, gofs.TypeInteger},
+		},
 	}
 
-	if details.Parameters[0].Title != "world" {
-		t.Errorf("Expected 'world', got %v", details.Parameters[0].Title)
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			details, err := gofs.GetFunctionDetails(tt.fn)
+			if err != nil {
+				t.Fatalf("GetFunctionDetails() error = %v", err)
+			}
 
-	details, err = gofs.GetFunctionDetails(hello2)
-	if err != nil {
-		t.Error(err)
-	}
-	if details.Name != "hello2" {
-		t.Errorf("Expected 'hello2', got %v", details)
-	}
+			if details.Name != tt.wantName {
+				t.Errorf("Name = %v, want %v", details.Name, tt.wantName)
+			}
 
-	if details.Parameters[0].Title != "worldParam" {
-		t.Errorf("Expected 'worldParam', got %v", details.Parameters[0].Title)
+			if len(details.Parameters) != len(tt.wantParams) {
+				t.Errorf("Got %d parameters, want %d", len(details.Parameters), len(tt.wantParams))
+			}
+
+			for i, want := range tt.wantParams {
+				if details.Parameters[i].Title != want {
+					t.Errorf("Parameter[%d] = %v, want %v", i, details.Parameters[i].Title, want)
+				}
+				if details.Parameters[i].Type != tt.wantTypes[i] {
+					t.Errorf("Parameter[%d] type = %v, want %v", i, details.Parameters[i].Type, tt.wantTypes[i])
+				}
+			}
+		})
 	}
 }

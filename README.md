@@ -1,30 +1,33 @@
 # gofs
 
-Fork and reworking of github.com/samjtro/gofs
+A Go module that converts functions with struct parameters into OpenAPI/JSON Schema descriptions. Fork and reworking of github.com/samjtro/gofs.
 
-License: GNU GENERAL PUBLIC LICENSE Version 2
+## Requirements
+- Functions must accept exactly one struct parameter
+- Parameter struct fields should use json tags for explicit naming
 
-Requires functions to be passed a single struct as a parameter. In that context, the code is able to deconstruct the function and parameters into a LLM tool call.
-
-
-
-## usage
+## Usage
 
 ```go
 import "github.com/mhpenta/gofs"
 
-type HelloFuncParams struct {
-    world string 
+type Params struct {
+    world string `json:"world"`
 }
 
-func hello(world HelloFuncParams) {}
+func helloTool(p Params) {}
 
-gofs.GetFunctionDetails(hello)
-/* returns {
-    Name: "hello",
-    Parameters: []Schema{
-        Title: "world",
-        Type: TypeString,
-    },
+details, err := gofs.GetFunctionDetails(helloTool)
+/* returns:
+{
+    "name": "helloTool",
+    "parameters": [{
+        "title": "world",
+        "type": "string"
+    }]
 }*/
+
 ```
+
+## License
+GNU General Public License v2
