@@ -27,7 +27,7 @@ const (
 // Represents a select subset of an [OpenAPI 3.0 schema
 // object](https://spec.openapis.org/oas/v3.0.3#schema).
 type Schema struct {
-	// The title of the parameter, see properties https://spec.openapis.org/oas/v3.0.3#properties
+	// See Title in the properties part of the spec, https://spec.openapis.org/oas/v3.0.3#properties
 	Title string `json:"title"`
 
 	// Required. Data type.
