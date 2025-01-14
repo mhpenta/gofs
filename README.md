@@ -9,19 +9,19 @@ Requires functions to be passed a single struct as a parameter. In that context,
 ## usage
 
 ```go
-import "github.com/samjtro/gofs"
+import "github.com/mhpenta/gofs"
 
 type HelloFuncParams struct {
-world string `json:"world"`
+    world string 
 }
 
-func hello(helloFuncParams HelloFuncParams) {}
-
+func hello(world HelloFuncParams) {}
 
 gofs.GetFunctionDetails(hello)
 /* returns {
     Name: "hello",
     Parameters: []Schema{
+        Title: "world",
         Type: TypeString,
     },
 }*/
