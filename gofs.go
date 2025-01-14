@@ -2,7 +2,6 @@ package gofs
 
 import (
 	"fmt"
-	"log/slog"
 	"reflect"
 	"runtime"
 	"strings"
@@ -62,12 +61,8 @@ func getParameters(t reflect.Type) []Parameters {
 		panic("Not a struct")
 	}
 
-	slog.Info("NumField", "numField", t.NumField())
-
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
-
-		slog.Info("Walking through", "field", field.Name, "type", field.Type.String())
 
 		tag := field.Tag.Get("json")
 
