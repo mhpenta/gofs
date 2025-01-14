@@ -4,9 +4,15 @@
 
 ```go
 import "github.com/samjtro/gofs"
-gofs.Get(func())
+
+func hello(world string) {}
+
+gofs.Get(hello)
 /* returns {
-    Name: "",
-    Parameters: []genai.Schema{},
+    Name: "hello",
+    Parameters: []genai.Schema{
+        Type: genai.TypeString,
+        Description: world,
+    },
 }*/
 ```
