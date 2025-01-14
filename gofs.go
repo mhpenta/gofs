@@ -64,9 +64,9 @@ func getParameters(t reflect.Type) []Parameters {
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 
-		tag := field.Tag.Get("json")
+		jsonFieldTag := field.Tag.Get("json")
 
-		tagParts := strings.Split(tag, ",") // splitting for omitempty, omitzero etc
+		tagParts := strings.Split(jsonFieldTag, ",") // splitting for omitempty, omitzero etc
 		tagName := tagParts[0]
 
 		if tagName == "" {
@@ -74,7 +74,7 @@ func getParameters(t reflect.Type) []Parameters {
 		}
 
 		params = append(params, Parameters{
-			Name: field.Name,
+			Name: tagName,
 			Type: field.Type,
 		})
 	}
