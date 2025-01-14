@@ -1,0 +1,2 @@
+# gofs
+go function signatures
