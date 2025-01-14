@@ -2,70 +2,119 @@ package gofs
 
 import (
 	"fmt"
+	"log/slog"
 	"reflect"
 	"runtime"
 	"strings"
-
-	"github.com/google/generative-ai-go/genai"
 )
 
 type Details struct {
-	Name       string
-	Parameters []genai.Schema
+	Name       string   `json:"name"`
+	Parameters []Schema `json:"parameters"`
 }
 
-func Get(f any) Details {
-	sig := fmt.Sprintf("%T", f)
-	p := destructureParams(sig)
+type Parameters struct {
+	Name string
+	Type reflect.Type
+}
+
+func GetFunctionDetails(f any) (*Details, error) {
+	paramType, _, err := getFunctionTypes(f)
+	if err != nil {
+		return nil, err
+	}
+	p := destructureParamsFromType(paramType)
 	n := getFunctionName(f)
 	items := strings.Split(n, ".")
-	return Details{
+	return &Details{
 		items[len(items)-1],
 		p,
-	}
+	}, nil
 }
 
-func destructureParams(s string) []genai.Schema {
-	var (
-		start   int
-		end     int
-		schemas []genai.Schema
-	)
-	for a, b := range s {
-		if b == '(' {
-			start = a
+func destructureParamsFromType(t reflect.Type) []Schema {
+	fmt.Println(t)
+	var schemas []Schema
+	params := getParameters(t)
+	for _, p := range params {
+		var s Schema
+		s.Title = p.Name
+		switch p.Type.String() {
+		case "bool":
+			s.Type = TypeBoolean
+		case "string", "[]byte", "[]rune":
+			s.Type = TypeString
+		case "int", "int8", "int16", "int32", "int64", "uint", "uint8", "uint16", "uint32", "uint64", "uintptr", "byte", "rune":
+			s.Type = TypeInteger
+		case "float32", "float64", "complex64", "complex128":
+			s.Type = TypeNumber
+		default:
+			s.Type = TypeObject
 		}
-		if b == ')' {
-			end = a
-		}
-	}
-	params := strings.Split(s[start:end], ", ")
-	for _, a := range params {
-		var t genai.Type
-		if a[0:1] == "[]" && (a[2:5] != "rune" && a[2:5] != "byte") {
-			t = genai.TypeArray
-		} else {
-			switch a {
-			case "bool":
-				t = genai.TypeBoolean
-			case "string", "[]byte", "[]rune":
-				t = genai.TypeString
-			case "int", "int8", "int16", "int32", "int64", "uint", "uint8", "uint16", "uint32", "uint64", "uintptr", "byte", "rune":
-				t = genai.TypeInteger
-			case "float32", "float64", "complex64", "complex128":
-				t = genai.TypeNumber
-			default:
-				t = genai.TypeObject
-			}
-		}
-		schemas = append(schemas, genai.Schema{
-			Type: t,
-		})
+		schemas = append(schemas, s)
 	}
 	return schemas
 }
 
-// credit: https://stackoverflow.com/questions/7052693/how-to-get-the-name-of-a-function-in-go
+func getParameters(t reflect.Type) []Parameters {
+	params := make([]Parameters, 0)
+	if t.Kind() != reflect.Struct {
+		panic("Not a struct")
+	}
+
+	slog.Info("NumField", "numField", t.NumField())
+
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+
+		slog.Info("Walking through", "field", field.Name, "type", field.Type.String())
+
+		tag := field.Tag.Get("json")
+
+		tagParts := strings.Split(tag, ",") // splitting for omitempty, omitzero etc
+		tagName := tagParts[0]
+
+		if tagName == "" {
+			tagName = strings.ToLower(field.Name)
+		}
+
+		params = append(params, Parameters{
+			Name: field.Name,
+			Type: field.Type,
+		})
+	}
+
+	return params
+}
+
+func getFunctionTypes(f interface{}) (paramType reflect.Type, returnTypes []reflect.Type, err error) {
+	fType := reflect.TypeOf(f)
+
+	if fType.Kind() != reflect.Func {
+		return nil, nil, fmt.Errorf("not a function")
+	}
+
+	numParams := fType.NumIn()
+
+	if numParams != 1 {
+		return nil, nil, fmt.Errorf("tool function must have exactly one parameter")
+	}
+
+	paramType = fType.In(0)
+
+	if paramType.Kind() != reflect.Struct {
+		return nil, nil, fmt.Errorf("parameter must be a struct")
+	}
+
+	numReturns := fType.NumOut()
+	returnTypes = make([]reflect.Type, numReturns)
+	for i := 0; i < numReturns; i++ {
+		returnTypes[i] = fType.Out(i)
+	}
+
+	return paramType, returnTypes, nil
+}
+
 func getFunctionName(i interface{}) string {
 	return runtime.FuncForPC(reflect.ValueOf(i).Pointer()).Name()
 }
