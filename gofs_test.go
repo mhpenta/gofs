@@ -3,7 +3,7 @@ package gofs_test
 import (
 	"testing"
 
-	"github.com/samjtro/gofs"
+	"github.com/mhpenta/gofs"
 )
 
 type HelloFuncParams struct {

@@ -11,7 +11,12 @@ Requires functions to be passed a single struct as a parameter. In that context,
 ```go
 import "github.com/samjtro/gofs"
 
-func hello(world string) {}
+type HelloFuncParams struct {
+world string `json:"world"`
+}
+
+func hello(helloFuncParams HelloFuncParams) {}
+
 
 gofs.GetFunctionDetails(hello)
 /* returns {
