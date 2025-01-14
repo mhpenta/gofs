@@ -12,7 +12,6 @@ gofs.Get(hello)
     Name: "hello",
     Parameters: []genai.Schema{
         Type: genai.TypeString,
-        Description: world,
     },
 }*/
 ```
